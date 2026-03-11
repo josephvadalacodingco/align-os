@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "appSlug": {
+      "value": "${APP_SLUG=template_base}"
+    },
+    "gitSha": {
+      "value": "${GIT_SHA=unknown}"
+    },
+    "containerImage": {
+      "value": "${CONTAINER_APP_IMAGE=mcr.microsoft.com/azuredocs/containerapps-helloworld:latest}"
+    },
+    "postgresAdminLogin": {
+      "value": "${POSTGRES_ADMIN_LOGIN=pgadmin}"
+    },
+    "postgresAdminPassword": {
+      "value": "${POSTGRES_ADMIN_PASSWORD}"
+    },
+    "devPublicIp": {
+      "value": "${DEV_PUBLIC_IP=}"
+    },
+    "postgresDatabaseName": {
+      "value": "${POSTGRES_DATABASE_NAME=appdb}"
+    },
+    "postgresLocation": {
+      "value": "${POSTGRES_LOCATION=}"
+    }
+  }
+}

@@ -1,0 +1,74 @@
+# Deploy to DEV on push to main
+# Configure: azd pipeline config (or set vars: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_ENV_NAME, AZURE_LOCATION, APP_SLUG)
+# Step 2: Set secret POSTGRES_ADMIN_PASSWORD. If Postgres fails in your region (LocationIsOfferRestricted), set var POSTGRES_LOCATION (e.g. eastus2).
+# OIDC: Set id-token: write and use federated credentials
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+      APP_SLUG: ${{ vars.APP_SLUG }}
+      GIT_SHA: ${{ github.sha }}
+      POSTGRES_LOCATION: ${{ vars.POSTGRES_LOCATION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install azd
+        uses: Azure/setup-azd@v2
+
+      - name: Log in with Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set CONTAINER_APP_IMAGE (preserve existing image when re-provisioning)
+        run: |
+          RG="rg-$(echo ${APP_SLUG//_/-} | tr '[:upper:]' '[:lower:]')-${AZURE_ENV_NAME}"
+          IMAGE=$(az containerapp list --resource-group "$RG" --query "[?tags.\"azd-service-name\"=='web'].properties.template.containers[0].image" -o tsv 2>/dev/null | head -1 || true)
+          if [ -n "$IMAGE" ]; then
+            echo "CONTAINER_APP_IMAGE=$IMAGE" >> $GITHUB_ENV
+            echo "Using existing container image so provision does not overwrite it"
+          else
+            echo "CONTAINER_APP_IMAGE=mcr.microsoft.com/azuredocs/containerapps-helloworld:latest" >> $GITHUB_ENV
+            echo "No existing app, using placeholder image"
+          fi
+
+      - name: Log in with azd (OIDC)
+        run: |
+          azd auth login \
+            --client-id "$AZURE_CLIENT_ID" \
+            --federated-credential-provider "github" \
+            --tenant-id "$AZURE_TENANT_ID"
+
+      - name: Prepare azd environment (ensure env exists and set Postgres password for Bicep)
+        run: |
+          azd env select "$AZURE_ENV_NAME" 2>/dev/null || azd env new "$AZURE_ENV_NAME" --no-prompt
+          azd env set POSTGRES_ADMIN_PASSWORD "$POSTGRES_ADMIN_PASSWORD"
+          [ -n "$POSTGRES_LOCATION" ] && azd env set POSTGRES_LOCATION "$POSTGRES_LOCATION" || true
+        env:
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+
+      - name: Provision Infrastructure
+        run: azd provision --no-prompt
+        env:
+          AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
+
+      - name: Deploy Application
+        run: azd deploy --no-prompt

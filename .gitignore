@@ -1,0 +1,8 @@
+node_modules
+.next
+.azure
+.env
+.env.local
+*.log
+.DS_Store
+infra/main.json
