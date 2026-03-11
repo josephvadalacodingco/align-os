@@ -1,4 +1,4 @@
-# Template Base
+# AlignOS
 
 A reusable Azure template for Next.js + Azure Container Apps + PostgreSQL + Auth (Email/Password + Google) with step-gated implementation.
 
