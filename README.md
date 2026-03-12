@@ -17,7 +17,7 @@ A reusable Azure template for Next.js + Azure Container Apps + PostgreSQL + Auth
 
 All naming derives from `template.config.json`:
 
-- **appSlug**: Used for resource names and env vars (e.g. `template_base`).
+- **appSlug**: Used for resource names and env vars (e.g. `alignos`).
 - **appDisplayName**: Human-readable name for the app.
 
 To start a new app: change `template.config.json` values and proceed.

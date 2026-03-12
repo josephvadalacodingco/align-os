@@ -4,7 +4,7 @@ targetScope = 'resourceGroup'
 param environmentName string
 @minLength(1)
 param location string
-param appSlug string = 'template_base'
+param appSlug string = 'alignos'
 param gitSha string = 'unknown'
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 param containerAppsEnvironmentName string = ''

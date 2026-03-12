@@ -9,7 +9,7 @@
       "value": "${AZURE_LOCATION}"
     },
     "appSlug": {
-      "value": "${APP_SLUG=template_base}"
+      "value": "${APP_SLUG=alignos}"
     },
     "gitSha": {
       "value": "${GIT_SHA=unknown}"

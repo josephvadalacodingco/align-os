@@ -9,8 +9,8 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
-@description('App slug from template.config.json (e.g. template_base)')
-param appSlug string = 'template_base'
+@description('App slug from template.config.json (e.g. alignos)')
+param appSlug string = 'alignos'
 
 @description('Git commit SHA, set during deploy (e.g. from github.sha)')
 param gitSha string = 'unknown'

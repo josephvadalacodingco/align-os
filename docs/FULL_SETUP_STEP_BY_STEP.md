@@ -38,7 +38,7 @@ There is **no separate azure-dev workflow**; everything goes through these two f
 
 1. Open `template.config.json`.
 2. Set:
-   - `appSlug`: e.g. `template_base`
+   - `appSlug`: e.g. `alignos`
    - `appDisplayName`: e.g. `Template Base`
 3. Commit.
 
@@ -66,7 +66,7 @@ Everything else (RG name, container app, ACR, etc.) derives from this.
      - `AZURE_SUBSCRIPTION_ID`
      - `AZURE_ENV_NAME` = `dev`
      - `AZURE_LOCATION` = `eastus` (for core resources).
-     - `APP_SLUG` = `template_base`.
+     - `APP_SLUG` = `alignos`.
      - Optional: `POSTGRES_LOCATION` if Postgres is blocked in `AZURE_LOCATION`.
    - Under **Secrets**:
      - `POSTGRES_ADMIN_PASSWORD` – we set a strong password.
@@ -112,7 +112,7 @@ Using `infra/main.parameters.json` which maps CI vars and env vars into Bicep pa
 
 - `environmentName` ← `${AZURE_ENV_NAME}`
 - `location` ← `${AZURE_LOCATION}`
-- `appSlug` ← `${APP_SLUG=template_base}`
+- `appSlug` ← `${APP_SLUG=alignos}`
 - `gitSha` ← `${GIT_SHA=unknown}`
 - `containerImage` ← `${CONTAINER_APP_IMAGE=...}`
 - `postgresAdminLogin` ← `${POSTGRES_ADMIN_LOGIN=pgadmin}`

@@ -82,8 +82,8 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
-@description('App slug from template.config.json (e.g. template_base)')
-param appSlug string = 'template_base'
+@description('App slug from template.config.json (e.g. alignos)')
+param appSlug string = 'alignos'
 
 @description('Git commit SHA, set during deploy (e.g. from github.sha)')
 param gitSha string = 'unknown'
@@ -169,7 +169,7 @@ targetScope = 'resourceGroup'
 param environmentName string
 @minLength(1)
 param location string
-param appSlug string = 'template_base'
+param appSlug string = 'alignos'
 param gitSha string = 'unknown'
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 param containerAppsEnvironmentName string = ''
@@ -365,7 +365,7 @@ output devDatabaseUrlInstructions string = 'In app/.env.local set DATABASE_URL=p
       "value": "${AZURE_LOCATION}"
     },
     "appSlug": {
-      "value": "${APP_SLUG=template_base}"
+      "value": "${APP_SLUG=alignos}"
     },
     "gitSha": {
       "value": "${GIT_SHA=unknown}"
