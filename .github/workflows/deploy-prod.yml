@@ -37,9 +37,10 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Set CONTAINER_APP_IMAGE (preserve existing image when re-provisioning)
+      - name: Set CONTAINER_APP_IMAGE and AZURE_RESOURCE_GROUP
         run: |
           RG="rg-$(echo ${APP_SLUG//_/-} | tr '[:upper:]' '[:lower:]')-${AZURE_ENV_NAME}"
+          echo "AZURE_RESOURCE_GROUP=$RG" >> $GITHUB_ENV
           IMAGE=$(az containerapp list --resource-group "$RG" --query "[?tags.\"azd-service-name\"=='web'].properties.template.containers[0].image" -o tsv 2>/dev/null | head -1 || true)
           if [ -n "$IMAGE" ]; then
             echo "CONTAINER_APP_IMAGE=$IMAGE" >> $GITHUB_ENV
