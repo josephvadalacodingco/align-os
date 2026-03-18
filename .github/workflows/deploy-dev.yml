@@ -9,6 +9,11 @@ on:
         description: "core | db | full"
         required: true
         default: "core"
+        type: choice
+        options:
+          - core
+          - db
+          - full
 
 permissions:
   id-token: write
@@ -27,7 +32,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 🔑 Azure login (OIDC)
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -35,34 +39,31 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 🔧 Ensure RG exists
-      - name: Create resource group if needed
+      - name: Ensure resource group exists
         run: |
           az group create \
-            --name $RESOURCE_GROUP \
-            --location $LOCATION
+            --name "$RESOURCE_GROUP" \
+            --location "$LOCATION"
 
-      # 📦 Get ACR name from params (simple extraction)
-      - name: Extract ACR name
+      - name: Extract ACR name from param file
         id: acr
+        shell: bash
         run: |
-          ACR_NAME=$(grep "param acrName" $PARAM_FILE | awk -F"'" '{print $2}')
-          echo "acr_name=$ACR_NAME" >> $GITHUB_OUTPUT
+          ACR_NAME=$(grep "param acrName" "$PARAM_FILE" | awk -F"'" '{print $2}')
+          echo "acr_name=$ACR_NAME" >> "$GITHUB_OUTPUT"
 
-      # 🐳 Build & push image
-      - name: Build and push image
+      - name: Build and push image to ACR
         run: |
           az acr build \
-            --registry ${{ steps.acr.outputs.acr_name }} \
-            --image web:${{ github.sha }} \
+            --registry "${{ steps.acr.outputs.acr_name }}" \
+            --image "web:${{ github.sha }}" \
             ./src
 
-      # 🚀 Deploy infra
       - name: Deploy Bicep
         run: |
           az deployment group create \
-            --resource-group $RESOURCE_GROUP \
+            --resource-group "$RESOURCE_GROUP" \
             --template-file infra/main.bicep \
-            --parameters $PARAM_FILE \
+            --parameters "$PARAM_FILE" \
             --parameters deployStage=${{ github.event.inputs.deploy_stage || 'core' }} \
                          imageTag=${{ github.sha }}
