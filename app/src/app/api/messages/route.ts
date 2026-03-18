@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Client } from 'pg';
 
 type DbConfig =
-  | { config: Parameters<typeof Client>[0]; error?: undefined }
+  | { config: ConstructorParameters<typeof Client>[0]; error?: undefined }
   | { config?: undefined; error: string };
 
 const TABLE_NAME = 'messages';
