@@ -12,7 +12,7 @@ param acrName = 'acralignosdev001'
 param logAnalyticsName = 'log-align-os-dev'
 param appInsightsName = 'appi-align-os-dev'
 
-param postgresServerName = 'psql-align-os-dev-001'
+param postgresServerName = 'psql-align-os-dev-002'
 param postgresDbName = 'appdb'
 param postgresAdminUser = 'pgadminlocal'
 param postgresAdminPassword = 'REPLACE_AT_DEPLOY_TIME'
