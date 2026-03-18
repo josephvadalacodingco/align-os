@@ -1,5 +1,5 @@
 {
-  "name": "template-base-app",
+  "name": "alignos-mvp",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,7 +12,10 @@
     "next": "14.2.18",
     "pg": "^8.13.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "@radix-ui/react-collapsible": "^1.1.0",
+    "@radix-ui/react-tabs": "^1.1.0",
+    "@prisma/client": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
@@ -21,6 +24,7 @@
     "@types/react-dom": "^18.3.1",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.18",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "prisma": "^6.0.0"
   }
 }

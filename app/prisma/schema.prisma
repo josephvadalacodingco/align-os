@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String         @id @default(uuid())
+  email     String         @unique
+  endeavors Endeavor[]
+  tasks     Task[]
+  events    CalendarEvent[]
+}
+
+model Endeavor {
+  id            String   @id @default(uuid())
+  userId        String
+  name          String
+  priorityRank  Int      // 1 = highest
+  baselineHours Float?
+  tasks         Task[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id            String   @id @default(uuid())
+  userId        String
+  endeavorId    String?
+  projectName   String?
+  type          TaskType
+  title         String
+  importance    Int      // 1–4
+  urgency       Int      // 1–4
+  durationHours Float    @default(1)
+  recurringRule String?
+  createdAt     DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endeavor Endeavor? @relation(fields: [endeavorId], references: [id])
+}
+
+model CalendarEvent {
+  id       String    @id @default(uuid())
+  userId   String
+  title    String
+  startTime DateTime
+  endTime   DateTime
+  type      EventType
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum TaskType {
+  ENDEAVOR
+  LIFE_MAINTENANCE
+}
+
+enum EventType {
+  HARD_CONSTRAINT
+  SCHEDULED_TASK
+}
+
