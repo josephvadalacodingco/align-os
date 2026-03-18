@@ -15,7 +15,7 @@ param appInsightsName = 'appi-align-os-prod'
 param postgresServerName = 'psql-align-os-prod-001'
 param postgresDbName = 'appdb'
 param postgresAdminUser = 'pgadminlocal'
-param postgresAdminPassword = 'Sierra23Luke25!'
+param postgresAdminPassword = 'REPLACE_AT_DEPLOY_TIME'
 
 param imageName = 'web'
 param imageTag = 'latest'

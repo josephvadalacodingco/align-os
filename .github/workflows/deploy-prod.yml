@@ -52,6 +52,14 @@ jobs:
           ACR_NAME=$(grep "param acrName" "$PARAM_FILE" | awk -F"'" '{print $2}')
           echo "acr_name=$ACR_NAME" >> "$GITHUB_OUTPUT"
 
+      - name: Deploy bootstrap infra
+        run: |
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file infra/main.bicep \
+            --parameters "$PARAM_FILE" \
+            --parameters deployStage=bootstrap
+
       - name: Build and push image to ACR
         run: |
           az acr build \
@@ -59,7 +67,7 @@ jobs:
             --image "web:${{ github.sha }}" \
             ./src
 
-      - name: Deploy Bicep
+      - name: Deploy requested stage
         run: |
           az deployment group create \
             --resource-group "$RESOURCE_GROUP" \

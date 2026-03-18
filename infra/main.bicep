@@ -13,12 +13,13 @@ param environmentName string
 param location string = resourceGroup().location
 
 @allowed([
+  'bootstrap'
   'core'
   'db'
   'full'
 ])
-@description('core = ACR + identity + CAE + app, db = core + postgres, full = db + monitoring')
-param deployStage string = 'core'
+@description('bootstrap = ACR + identity + CAE, core = bootstrap + app, db = core + postgres, full = db + monitoring')
+param deployStage string = 'bootstrap'
 
 @description('Container Apps environment name')
 param containerAppsEnvironmentName string
@@ -81,6 +82,12 @@ var tags = {
   managedBy: 'bicep'
 }
 
+var deployApp = contains([
+  'core'
+  'db'
+  'full'
+], deployStage)
+
 var deployDb = contains([
   'db'
   'full'
@@ -140,7 +147,7 @@ module postgres './modules/postgres.bicep' = if (deployDb) {
   }
 }
 
-module app './modules/container-app.bicep' = {
+module app './modules/container-app.bicep' = if (deployApp) {
   name: 'app'
   params: {
     location: location
@@ -166,8 +173,8 @@ module app './modules/container-app.bicep' = {
   }
 }
 
-output containerAppName string = containerAppName
-output containerAppFqdn string = app.outputs.fqdn
+output containerAppName string = deployApp ? containerAppName : ''
+output containerAppFqdn string = deployApp ? app.outputs.fqdn : ''
 output acrName string = acrName
 output acrLoginServer string = acr.outputs.loginServer
 output postgresHost string = deployDb ? postgres.outputs.fqdn : ''
