@@ -59,6 +59,10 @@ var dbEnv = empty(postgresHost) ? [] : [
     name: 'POSTGRES_PASSWORD'
     value: postgresPassword
   }
+  {
+    name: 'DATABASE_URL'
+    value: 'postgresql://${postgresUser}:${postgresPassword}@${postgresHost}:5432/${postgresDbName}?sslmode=require'
+  }
 ]
 
 resource app 'Microsoft.App/containerApps@2025-07-01' = {
