@@ -58,6 +58,7 @@ jobs:
             --resource-group "$RESOURCE_GROUP" \
             --template-file infra/main.bicep \
             --parameters "$PARAM_FILE" \
+                         postgresAdminPassword='${{ secrets.POSTGRES_ADMIN_PASSWORD }}' \
             --parameters deployStage=bootstrap
 
       - name: Build and push image to ACR
@@ -73,5 +74,6 @@ jobs:
             --resource-group "$RESOURCE_GROUP" \
             --template-file infra/main.bicep \
             --parameters "$PARAM_FILE" \
+                         postgresAdminPassword='${{ secrets.POSTGRES_ADMIN_PASSWORD }}' \
             --parameters deployStage=${{ github.event.inputs.deploy_stage || 'full' }} \
                          imageTag=${{ github.sha }}

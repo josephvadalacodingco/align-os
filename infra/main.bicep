@@ -168,6 +168,8 @@ module app './modules/container-app.bicep' = if (deployApp) {
     appInsightsConnectionString: deployMonitor ? monitor.outputs.appInsightsConnectionString : ''
     postgresHost: deployDb ? postgres.outputs.fqdn : ''
     postgresDbName: deployDb ? postgresDbName : ''
+    postgresUser: deployDb ? postgresAdminUser : ''
+    postgresPassword: deployDb ? postgresAdminPassword : ''
     deployStage: deployStage
     tags: tags
   }

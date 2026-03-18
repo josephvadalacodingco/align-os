@@ -16,6 +16,9 @@ param externalIngress bool
 param appInsightsConnectionString string = ''
 param postgresHost string = ''
 param postgresDbName string = ''
+param postgresUser string = ''
+@secure()
+param postgresPassword string = ''
 param deployStage string = 'core'
 param tags object = {}
 
@@ -47,6 +50,14 @@ var dbEnv = empty(postgresHost) ? [] : [
   {
     name: 'POSTGRES_DB'
     value: postgresDbName
+  }
+  {
+    name: 'POSTGRES_USER'
+    value: postgresUser
+  }
+  {
+    name: 'POSTGRES_PASSWORD'
+    value: postgresPassword
   }
 ]
 

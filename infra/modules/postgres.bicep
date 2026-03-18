@@ -45,6 +45,16 @@ resource db 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2026-01-01-prev
   }
 }
 
+// Allow connections from Azure services (including Container Apps) via special 0.0.0.0 rule
+resource firewallAllowAzure 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2022-12-01' = {
+  parent: postgres
+  name: 'AllowAllAzureServicesAndResourcesWithinAzureIps'
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
+  }
+}
+
 output id string = postgres.id
 output fqdn string = postgres.properties.fullyQualifiedDomainName
 output dbName string = db.name
