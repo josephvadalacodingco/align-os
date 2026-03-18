@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Client } from 'pg';
 
 export async function GET(request: Request) {
   const authHeaders = ['X-MS-CLIENT-PRINCIPAL', 'X-MS-CLIENT-PRINCIPAL-NAME', 'X-MS-CLIENT-PRINCIPAL-ID'];
@@ -6,12 +7,19 @@ export async function GET(request: Request) {
 
   let dbOk = false;
   if (process.env.DATABASE_URL) {
+    let client: Client | null = null;
     try {
-      const origin = new URL(request.url).origin;
-      const res = await fetch(`${origin}/api/db-check`);
-      dbOk = res.ok && (await res.json()).dbOk === true;
+      client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      });
+      await client.connect();
+      const result = await client.query('SELECT now() as server_time');
+      dbOk = !!result.rows[0]?.server_time;
     } catch {
       dbOk = false;
+    } finally {
+      if (client) await client.end();
     }
   }
 
@@ -21,7 +29,9 @@ export async function GET(request: Request) {
   if (!process.env.DATABASE_URL) {
     helpfulMessages.push('DATABASE_URL not set - DB checks skipped');
   } else if (!dbOk) {
-    helpfulMessages.push('DB check failed - likely causes: missing DATABASE_URL, firewall blocked, SSL required (sslmode=require)');
+    helpfulMessages.push(
+      'DB check failed - likely causes: missing DATABASE_URL, firewall blocked, SSL required (sslmode=require)'
+    );
   }
   if (!authOk) {
     helpfulMessages.push('Auth headers not present - auth checks skipped (Step 3)');
