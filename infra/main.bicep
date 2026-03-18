@@ -45,6 +45,9 @@ param postgresServerName string
 @description('PostgreSQL database name')
 param postgresDbName string = 'appdb'
 
+@description('Optional. Region for PostgreSQL only. Defaults to location if empty.')
+param postgresLocation string = ''
+
 @description('PostgreSQL admin username')
 param postgresAdminUser string = 'pgadminlocal'
 
@@ -138,7 +141,7 @@ module cae './modules/container-app-env.bicep' = {
 module postgres './modules/postgres.bicep' = if (deployDb) {
   name: 'postgres'
   params: {
-    location: location
+    location: empty(postgresLocation) ? location : postgresLocation
     postgresServerName: postgresServerName
     postgresDbName: postgresDbName
     postgresAdminUser: postgresAdminUser

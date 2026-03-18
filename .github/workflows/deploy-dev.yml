@@ -8,7 +8,7 @@ on:
       deploy_stage:
         description: "core | db | full"
         required: true
-        default: "core"
+        default: "db"
         type: choice
         options:
           - core
@@ -76,5 +76,5 @@ jobs:
             --template-file infra/main.bicep \
             --parameters "$PARAM_FILE" \
                          postgresAdminPassword='${{ secrets.POSTGRES_ADMIN_PASSWORD }}' \
-            --parameters deployStage=${{ github.event.inputs.deploy_stage || 'core' }} \
+            --parameters deployStage=${{ github.event.inputs.deploy_stage || 'db' }} \
                          imageTag=${{ github.sha }}
