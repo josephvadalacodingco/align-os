@@ -65,7 +65,8 @@ jobs:
           az acr build \
             --registry "${{ steps.acr.outputs.acr_name }}" \
             --image "web:${{ github.sha }}" \
-            ./src
+            --file app/Dockerfile \
+            app
 
       - name: Deploy requested stage
         run: |
