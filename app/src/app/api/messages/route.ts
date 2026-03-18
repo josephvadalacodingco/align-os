@@ -35,12 +35,6 @@ function getDbConfig(): DbConfig {
   };
 }
 
-function ensureAuthenticated(request: NextRequest): string | null {
-  const principalHeader = request.headers.get('x-ms-client-principal');
-  if (!principalHeader) return 'Unauthenticated: x-ms-client-principal header missing (configure Container Apps auth for protected APIs).';
-  return null;
-}
-
 async function withClient<T>(fn: (client: Client) => Promise<T>): Promise<T> {
   const { config, error } = getDbConfig();
   if (error) {
@@ -63,12 +57,7 @@ async function withClient<T>(fn: (client: Client) => Promise<T>): Promise<T> {
   }
 }
 
-export async function GET(request: NextRequest) {
-  const authError = ensureAuthenticated(request);
-  if (authError) {
-    return NextResponse.json({ error: authError }, { status: 401 });
-  }
-
+export async function GET(_request: NextRequest) {
   try {
     const messages = await withClient(async (client) => {
       const result = await client.query(
@@ -92,11 +81,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authError = ensureAuthenticated(request);
-  if (authError) {
-    return NextResponse.json({ error: authError }, { status: 401 });
-  }
-
   let content: string | null = null;
   try {
     const body = await request.json().catch(() => ({}));
