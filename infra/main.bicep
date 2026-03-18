@@ -1,87 +1,173 @@
-targetScope = 'subscription'
+targetScope = 'resourceGroup'
 
-@minLength(1)
-@maxLength(64)
-@description('Name of the environment (e.g. dev, prod)')
+@description('Short app name, e.g. app1')
+param appName string
+
+@allowed([
+  'dev'
+  'prod'
+])
 param environmentName string
 
-@minLength(1)
-@description('Primary location for all resources')
-param location string
+@description('Azure region')
+param location string = resourceGroup().location
 
-@description('App slug from template.config.json (e.g. alignos)')
-param appSlug string = 'alignos'
+@allowed([
+  'core'
+  'db'
+  'full'
+])
+@description('core = ACR + identity + CAE + app, db = core + postgres, full = db + monitoring')
+param deployStage string = 'core'
 
-@description('Git commit SHA, set during deploy (e.g. from github.sha)')
-param gitSha string = 'unknown'
+@description('Container Apps environment name')
+param containerAppsEnvironmentName string
 
-@description('Override resource group name')
-param resourceGroupName string = ''
+@description('Container App name')
+param containerAppName string
 
-@description('Override container apps environment name')
-param containerAppsEnvironmentName string = ''
+@description('User-assigned managed identity name')
+param identityName string
 
-@description('Override container registry name')
-param containerRegistryName string = ''
+@description('Azure Container Registry name')
+param acrName string
 
-@description('Override container app name')
-param containerAppName string = ''
+@description('Log Analytics workspace name')
+param logAnalyticsName string
 
-@description('Container image (use current app image when re-provisioning so image is not overwritten)')
-param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+@description('Application Insights name')
+param appInsightsName string
 
-@description('PostgreSQL admin login')
-param postgresAdminLogin string = 'pgadmin'
-@secure()
-@description('PostgreSQL admin password (min 8 chars, mixed case, numbers, symbols)')
-param postgresAdminPassword string
-@description('DEV only: public IP to allow for local dev (e.g. from azd env). Empty = skip.')
-param devPublicIp string = ''
+@description('PostgreSQL server name')
+param postgresServerName string
+
 @description('PostgreSQL database name')
-param postgresDatabaseName string = 'appdb'
-@description('Region for PostgreSQL only (defaults to location). Set when primary location has Postgres quota restrictions (e.g. eastus2).')
-param postgresLocation string = ''
+param postgresDbName string = 'appdb'
 
-var slugForNaming = replace(toLower(appSlug), '_', '-')
+@description('PostgreSQL admin username')
+param postgresAdminUser string = 'pgadminlocal'
+
+@secure()
+@description('PostgreSQL admin password')
+param postgresAdminPassword string
+
+@description('Container image name')
+param imageName string = 'web'
+
+@description('Container image tag')
+param imageTag string = 'latest'
+
+@description('Container port')
+param targetPort int = 3000
+
+@description('Minimum replicas')
+param minReplicas int = 1
+
+@description('Maximum replicas')
+param maxReplicas int = 2
+
+@description('CPU cores as string so 0.5 works too')
+param containerCpu string = '0.5'
+
+@description('Memory, e.g. 1Gi or 2Gi')
+param containerMemory string = '1Gi'
+
+@description('Expose app publicly')
+param externalIngress bool = true
+
 var tags = {
-  'azd-env-name': environmentName
+  app: appName
+  environment: environmentName
+  managedBy: 'bicep'
 }
 
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: !empty(resourceGroupName) ? resourceGroupName : 'rg-${slugForNaming}-${environmentName}'
-  location: location
-  tags: tags
-}
+var deployDb = contains([
+  'db'
+  'full'
+], deployStage)
 
-module infra './infra.bicep' = {
-  name: 'infra-deployment'
-  scope: rg
+var deployMonitor = contains([
+  'full'
+], deployStage)
+
+module acr './modules/acr.bicep' = {
+  name: 'acr'
   params: {
-    environmentName: environmentName
     location: location
-    appSlug: appSlug
-    gitSha: gitSha
-    containerImage: containerImage
-    containerAppsEnvironmentName: containerAppsEnvironmentName
-    containerRegistryName: containerRegistryName
-    containerAppName: containerAppName
-    postgresAdminLogin: postgresAdminLogin
-    postgresAdminPassword: postgresAdminPassword
-    devPublicIp: devPublicIp
-    postgresDatabaseName: postgresDatabaseName
-    postgresLocation: postgresLocation
+    acrName: acrName
+    tags: tags
   }
 }
 
-output containerAppUrl string = infra.outputs.containerAppUri
-output resourceGroupName string = rg.name
-output containerAppName string = infra.outputs.containerAppName
-output AZURE_LOCATION string = location
-output AZURE_TENANT_ID string = tenant().tenantId
-output AZURE_CONTAINER_REGISTRY_NAME string = infra.outputs.acrName
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = infra.outputs.acrLoginServer
-output AZURE_CONTAINER_ENVIRONMENT_NAME string = infra.outputs.envName
-output postgresServerFqdn string = infra.outputs.postgresServerFqdn
-output databaseName string = infra.outputs.databaseName
-output postgresAdminLogin string = infra.outputs.postgresAdminLogin
-output devDatabaseUrlInstructions string = infra.outputs.devDatabaseUrlInstructions
+module identity './modules/identity.bicep' = {
+  name: 'identity'
+  params: {
+    location: location
+    identityName: identityName
+    tags: tags
+  }
+}
+
+module monitor './modules/monitor.bicep' = if (deployMonitor) {
+  name: 'monitor'
+  params: {
+    location: location
+    logAnalyticsName: logAnalyticsName
+    appInsightsName: appInsightsName
+    tags: tags
+  }
+}
+
+module cae './modules/container-app-env.bicep' = {
+  name: 'cae'
+  params: {
+    location: location
+    containerAppsEnvironmentName: containerAppsEnvironmentName
+    logAnalyticsWorkspaceId: deployMonitor ? monitor.outputs.logAnalyticsWorkspaceId : ''
+    tags: tags
+  }
+}
+
+module postgres './modules/postgres.bicep' = if (deployDb) {
+  name: 'postgres'
+  params: {
+    location: location
+    postgresServerName: postgresServerName
+    postgresDbName: postgresDbName
+    postgresAdminUser: postgresAdminUser
+    postgresAdminPassword: postgresAdminPassword
+    tags: tags
+  }
+}
+
+module app './modules/container-app.bicep' = {
+  name: 'app'
+  params: {
+    location: location
+    containerAppName: containerAppName
+    containerAppsEnvironmentId: cae.outputs.containerAppsEnvironmentId
+    identityResourceId: identity.outputs.id
+    identityPrincipalId: identity.outputs.principalId
+    acrName: acrName
+    acrLoginServer: acr.outputs.loginServer
+    imageName: imageName
+    imageTag: imageTag
+    targetPort: targetPort
+    minReplicas: minReplicas
+    maxReplicas: maxReplicas
+    containerCpu: containerCpu
+    containerMemory: containerMemory
+    externalIngress: externalIngress
+    appInsightsConnectionString: deployMonitor ? monitor.outputs.appInsightsConnectionString : ''
+    postgresHost: deployDb ? postgres.outputs.fqdn : ''
+    postgresDbName: deployDb ? postgresDbName : ''
+    deployStage: deployStage
+    tags: tags
+  }
+}
+
+output containerAppName string = containerAppName
+output containerAppFqdn string = app.outputs.fqdn
+output acrName string = acrName
+output acrLoginServer string = acr.outputs.loginServer
+output postgresHost string = deployDb ? postgres.outputs.fqdn : ''

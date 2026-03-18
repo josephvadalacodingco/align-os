@@ -21,7 +21,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-      APP_SLUG: ${{ vars.APP_SLUG }}
+      # Hard-code APP_SLUG for this repo so we don't depend on a GitHub variable being present
+      APP_SLUG: align_os
       GIT_SHA: ${{ github.sha }}
       POSTGRES_LOCATION: ${{ vars.POSTGRES_LOCATION }}
     steps:
